@@ -44,7 +44,14 @@ namespace TT::Papyrus {
 
         cam->worldFOV       = a_fov;
         cam->firstPersonFOV = a_fov;
-        SKSE::log::info("SetFOV: {:.1f}", a_fov);
+
+        // In Skyrim VR the HMD lens dictates the visual FOV; worldFOV still
+        // affects UI/2D rendering but will not visually zoom the view.
+        if (REL::Module::IsVR()) {
+            SKSE::log::info("SetFOV: {:.1f} (VR: visual FOV is HMD-controlled)", a_fov);
+        } else {
+            SKSE::log::info("SetFOV: {:.1f}", a_fov);
+        }
     }
 
     void ResetFOV(RE::StaticFunctionTag*) {

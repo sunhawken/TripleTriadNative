@@ -49,7 +49,13 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse) {
     SKSE::Init(a_skse);
     InitLogging();
 
-    SKSE::log::info("{} v{} loaded", PLUGIN_NAME, PLUGIN_VERSION);
+    // Runtime detection (multi-target build supports SE, AE, and VR).
+    const char* runtime = "Unknown";
+    if (REL::Module::IsVR())      runtime = "Skyrim VR";
+    else if (REL::Module::IsAE()) runtime = "Skyrim AE";
+    else if (REL::Module::IsSE()) runtime = "Skyrim SE";
+
+    SKSE::log::info("{} v{} loaded on {}", PLUGIN_NAME, PLUGIN_VERSION, runtime);
 
     if (auto* messaging = SKSE::GetMessagingInterface()) {
         messaging->RegisterListener(OnDataLoaded);
