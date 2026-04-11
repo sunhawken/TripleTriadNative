@@ -1,0 +1,512 @@
+script TT_PlayerAliasScript : ReferenceAlias {
+
+    var TT_Script: TT_Skyrim_QuestScript {get set}
+    var TT_PlayersCurrentCards: FormList {get set}
+    var TT_CardLevelsLists: FormList {get set}
+    var TT_UniqueCards: FormList {get set}
+    var TT_UniqueCardsB: FormList {get set}
+    var TT_UniqueCardsC: FormList {get set}
+    var TT_UniqueModCards: FormList {get set}
+    var TT_AllModCardsMiscList: FormList {get set}
+    var TT_AllCardsMiscList: FormList {get set}
+    var TT_CardPackSavesList: FormList {get set}
+    var TT_AllMiscCardBuySellList: FormList {get set}
+
+    var TT_GunbladeAbility: Spell {get set}
+    var TT_Gunblade: Weapon {get set}
+
+    var PlayerRef: Actor {get set}
+    var TT_PlayerCardsChest: ObjectReference {get set}
+    var TT_WinnerChestA: ObjectReference {get set}
+    var TT_CardToGet: ReferenceAlias {get set}
+    var TT_RuleBook: Book {get set}
+    var TT_SetRulesConfirm: Message {get set}
+
+    var TT_FaelanRef: Actor {get set}
+    var TT_FaelanStartQuest: Quest {get set}
+
+    var TT_Flips: GlobalVariable {get set}
+    var TT_BoardMisc: MiscObject {get set}
+    var TT_BoardTorch: Light {get set}
+    var TT_CardPack: MiscObject {get set}
+    var TT_NPCCardPack: MiscObject {get set}
+    var TT_CardPackSaves: MiscObject {get set}
+    var TT_NPCCardPackTorch: Light {get set}
+    var TT_CardPackTorch: Light {get set}
+
+    var TT_DisplayBookCardsAlias: ReferenceAlias {get set}
+
+    var DLC2Mq06: Quest {get set}
+    var MQ305: Quest {get set}
+    var DLC2dunKarstaagQST: Quest {get set}
+    var DA15: Quest {get set}
+    var DLC2EbonyWarriorQuest: Quest {get set}
+    var MQPaarthurnax: Quest {get set}
+    var TT_UniqueCardsDeadCheck: FormList {get set}
+    var TT_UniqueCardsActorsDeadCheck: FormList {get set}
+
+    event onInit() {
+        self.AddInventoryEventFilter(TT_AllCardsMiscList as Form)
+        self.AddInventoryEventFilter(TT_AllModCardsMiscList as Form)
+        self.AddInventoryEventFilter(TT_BoardMisc as Form)
+        self.AddInventoryEventFilter(TT_CardPack as Form)
+        self.AddInventoryEventFilter(TT_CardPackTorch as Form)
+        self.AddInventoryEventFilter(TT_NPCCardPack as Form)
+        self.AddInventoryEventFilter(TT_NPCCardPackTorch as Form)
+
+        onPlayerLoadGame()
+    }
+
+    event onPlayerLoadGame() {
+        self.AddInventoryEventFilter(TT_AllCardsMiscList as Form)
+        self.AddInventoryEventFilter(TT_AllModCardsMiscList as Form)
+        self.AddInventoryEventFilter(TT_BoardMisc as Form)
+        self.AddInventoryEventFilter(TT_CardPack as Form)
+        self.AddInventoryEventFilter(TT_CardPackTorch as Form)
+        self.AddInventoryEventFilter(TT_NPCCardPack as Form)
+        self.AddInventoryEventFilter(TT_NPCCardPackTorch as Form)
+
+        TT_Script.SetCardTrackerBookDisplays()
+
+        var UniqueCardCount = PlayerRef.GetItemCount(TT_UniqueCards as Form) + TT_PlayerCardsChest.GetItemCount(TT_UniqueCards as Form) + PlayerRef.GetItemCount(TT_UniqueModCards as Form) + TT_PlayerCardsChest.GetItemCount(TT_UniqueModCards as Form)
+
+        if UniqueCardCount >= 5 && TT_PlayersCurrentCards.GetSize() >= 20 && TT_FaelanStartQuest.IsRunning() == false {
+            TT_FaelanStartQuest.Start()
+        }
+    }
+
+    event onItemAdded(akBaseItem: Form, aiItemCount: Int, akItemReference: ObjectReference, akSourceContainer: ObjectReference) {
+        if akBaseItem == TT_BoardMisc as Form {
+            PlayerRef.RemoveItem(TT_BoardMisc as Form, aiItemCount, true)
+            PlayerRef.AddItem(TT_BoardTorch as Form, aiItemCount, true)
+        } else if akBaseItem == TT_CardPack as Form && TT_Script.VendorCardPackAuto == false {
+            PlayerRef.RemoveItem(TT_CardPack as Form, aiItemCount, true)
+            PlayerRef.AddItem(TT_CardPackTorch as Form, aiItemCount, true)
+        } else if akBaseItem == TT_NPCCardPack as Form && !TT_Script.NPCCardPackAuto {
+            PlayerRef.RemoveItem(TT_NPCCardPack as Form, aiItemCount, true)
+            PlayerRef.AddItem(TT_NPCCardPackTorch as Form, aiItemCount, true)
+        }
+
+        if TT_UniqueCardsB.HasForm(akBaseItem) || TT_UniqueModCards.HasForm(akBaseItem) {
+            TT_UniqueCardsB.RemoveAddedForm(akBaseItem)
+            if TT_Script.NPCBossCards == true {
+                var GoldValue = akBaseItem.GetGoldValue()
+                var Index = 9
+                if GoldValue == 80 {
+                    Index = 7
+                } else if GoldValue == 90 {
+                    Index = 8
+                }
+                (TT_CardLevelsLists.GetAt(Index) as FormList).AddForm(akBaseItem)
+            }
+            TT_UniqueCardsC.AddForm(akBaseItem)
+        }
+
+        if TT_Script.GiftMenuOpen == true && akSourceContainer == TT_Script.Opponent as ObjectReference {
+            TT_Script.CardsTaken += 1
+            if TT_Script.CardsTaken >= TT_Script.WinnerCardAmount {
+                Game.DisablePlayerControls()
+                Game.EnablePlayerControls()
+                var M = 5
+                while M > 0 {
+                    M -= 1
+                    TT_Script.Opponent.RemoveItem(TT_Script.TT_OpponentCards.GetAt(M), 100)
+                }
+            }
+        }
+
+        if TT_AllCardsMiscList.HasForm(akBaseItem) || TT_AllModCardsMiscList.HasForm(akBaseItem) {
+            if TT_Script.TransferCards == true && akSourceContainer != TT_PlayerCardsChest && PlayerRef.GetItemCount(TT_BoardTorch as Form) > 0 {
+                PlayerRef.RemoveItem(akBaseItem, aiItemCount, true, TT_PlayerCardsChest)
+            }
+        }
+
+        if akBaseItem == TT_NPCCardPack as Form || akBaseItem == TT_NPCCardPackTorch as Form {
+            ConvertPackToCards(akSourceContainer as Actor, aiItemCount)
+        } else if akBaseItem == TT_CardPack as Form || akBaseItem == TT_CardPackTorch as Form {
+            if TT_Script.VendorCardPackAuto == true {
+                var Index = 0
+                while Index < aiItemCount {
+                    Index += 1
+                    PlayerRef.UnequipItem(TT_CardPackTorch as Form, false, true)
+
+                    var TT_CardPackArray: [MiscObject] = [MiscObject; 22]
+
+                    var I = 0
+                    var MaxCards = GetMaxCards(true)
+
+                    while I < MaxCards {
+                        if I == 0 {
+                            var R = Utility.RandomInt(0, 100)
+                            if R < 5 {
+                                TT_CardPackArray[I] = FindRandomCardRare()
+                            } else if R <= 15 {
+                                TT_CardPackArray[I] = FindRandomCardUncommon()
+                            } else {
+                                TT_CardPackArray[I] = FindRandomCard()
+                            }
+                            I += 1
+                        } else if I == 1 {
+                            var R = Utility.RandomInt(0, 100)
+                            if R <= 15 {
+                                var RandomCard = FindRandomCardUncommon()
+                                if TT_CardPackArray.find(RandomCard) == -1 {
+                                    TT_CardPackArray[I] = RandomCard
+                                    I += 1
+                                }
+                            } else {
+                                var RandomCard = FindRandomCard()
+                                if TT_CardPackArray.find(RandomCard) == -1 {
+                                    TT_CardPackArray[I] = RandomCard
+                                    I += 1
+                                }
+                            }
+                        } else {
+                            var RandomCard = FindRandomCard()
+                            TT_CardPackArray[I] = RandomCard
+                            I += 1
+                        }
+                    }
+
+                    while MaxCards > 0 {
+                        MaxCards -= 1
+                        PlayerRef.AddItem(TT_CardPackArray[MaxCards] as Form, 1)
+                    }
+
+                    PlayerRef.RemoveItem(TT_CardPack as Form, 1, true)
+                    PlayerRef.RemoveItem(TT_CardPackTorch as Form, 1, true)
+                }
+            }
+        }
+    }
+
+    event onObjectEquipped(akBaseObject: Form, akReference: ObjectReference) {
+        if akBaseObject == TT_BoardTorch as Form || akBaseObject == TT_BoardMisc as Form {
+            PlayerRef.UnequipItem(TT_BoardTorch as Form, false, true)
+            Game.DisablePlayerControls()
+            Utility.Wait(0.1)
+            Game.EnablePlayerControls()
+            Utility.Wait(0.1)
+            PlayerRef.UnequipItem(TT_BoardTorch as Form, false, true)
+            TT_PlayerCardsChest.Activate(PlayerRef as ObjectReference)
+        } else if akBaseObject == TT_CardPack as Form || akBaseObject == TT_CardPackTorch as Form {
+            PlayerRef.UnequipItem(TT_CardPackTorch as Form, false, true)
+            Game.DisablePlayerControls()
+            Game.EnablePlayerControls()
+            PlayerRef.UnequipItem(TT_CardPackTorch as Form, false, true)
+
+            TT_WinnerChestA.RemoveAllItems()
+            var TT_CardPackArray: [MiscObject] = [MiscObject; 22]
+
+            var MaxCards = GetMaxCards(true)
+
+            var I = 0
+            while I < MaxCards {
+                if I == 0 {
+                    var R = Utility.RandomInt(0, 100)
+                    if R < 5 {
+                        TT_CardPackArray[I] = FindRandomCardRare()
+                    } else if R <= 15 {
+                        TT_CardPackArray[I] = FindRandomCardUncommon()
+                    } else {
+                        TT_CardPackArray[I] = FindRandomCard()
+                    }
+                    I += 1
+                } else if I == 1 {
+                    var R = Utility.RandomInt(0, 100)
+                    if R <= 15 {
+                        var RandomCard = FindRandomCardUncommon()
+                        if TT_CardPackArray.find(RandomCard) == -1 {
+                            TT_CardPackArray[I] = RandomCard
+                            I += 1
+                        }
+                    } else {
+                        var RandomCard = FindRandomCard()
+                        if TT_CardPackArray.find(RandomCard) == -1 {
+                            TT_CardPackArray[I] = RandomCard
+                            I += 1
+                        }
+                    }
+                } else {
+                    var RandomCard = FindRandomCard()
+                    TT_CardPackArray[I] = RandomCard
+                    I += 1
+                }
+            }
+
+            while MaxCards > 0 {
+                MaxCards -= 1
+                TT_WinnerChestA.AddItem(TT_CardPackArray[MaxCards] as Form, 1)
+            }
+
+            Utility.Wait(0.5)
+            TT_WinnerChestA.Activate(PlayerRef as ObjectReference)
+            PlayerRef.RemoveItem(TT_CardPack as Form, 1, true)
+            PlayerRef.RemoveItem(TT_CardPackTorch as Form, 1, true)
+
+        } else if akBaseObject == TT_NPCCardPack as Form || akBaseObject == TT_NPCCardPackTorch as Form {
+            PlayerRef.UnequipItem(TT_NPCCardPackTorch as Form, false, true)
+            Game.DisablePlayerControls()
+            Game.EnablePlayerControls()
+            PlayerRef.UnequipItem(TT_NPCCardPackTorch as Form, false, true)
+            TT_WinnerChestA.RemoveAllItems()
+
+            if TT_CardPackSavesList.GetSize() == 0 {
+                ConvertPackToCards(none, 1)
+                var WaitAmount = 0
+                while WaitAmount < 50 {
+                    var R = Utility.RandomInt(0, 100)
+                    WaitAmount += 1
+                }
+            }
+
+            var TT_CardPackSave: ObjectReference = TT_CardPackSavesList.GetAt(0) as ObjectReference
+            var SavesScript: TT_CardPackSavesScript = TT_CardPackSave as TT_CardPackSavesScript
+            var M = SavesScript.Cards.find(none)
+            while M > 0 {
+                M -= 1
+                TT_WinnerChestA.AddItem(SavesScript.Cards[M] as Form, 1)
+            }
+            Utility.Wait(0.5)
+            TT_WinnerChestA.Activate(PlayerRef as ObjectReference)
+            SavesScript.Cards = none
+            TT_CardPackSavesList.RemoveAddedForm(TT_CardPackSave as Form)
+            TT_CardPackSave.Disable()
+            TT_CardPackSave.Delete()
+            PlayerRef.RemoveItem(TT_NPCCardPack as Form, 1, true)
+            PlayerRef.RemoveItem(TT_NPCCardPackTorch as Form, 1, true)
+
+        } else if akBaseObject == TT_RuleBook as Form {
+            if TT_SetRulesConfirm.Show() == 0 {
+                Game.DisablePlayerControls()
+                Game.EnablePlayerControls()
+                TT_Script.SetPlayerRulesDisplay()
+                Utility.Wait(0.5)
+                TT_Script.SetRules()
+            }
+        } else if akBaseObject == TT_Gunblade as Form {
+            PlayerRef.AddSpell(TT_GunbladeAbility, false)
+        }
+    }
+
+    event onObjectUnequipped(akBaseObject: Form, akReference: ObjectReference) {
+        if akBaseObject == TT_Gunblade as Form {
+            if PlayerRef.GetEquippedWeapon() != TT_Gunblade && PlayerRef.GetEquippedWeapon(true) != TT_Gunblade {
+                PlayerRef.RemoveSpell(TT_GunbladeAbility)
+            }
+        }
+    }
+
+    fun GetMaxCards(isSealed: Bool = false) -> Int {
+        var MaxCards: Int
+        if TT_Script.CardPackMinCards == TT_Script.CardPackMaxCards || isSealed {
+            MaxCards = TT_Script.CardPackMaxCards
+        } else {
+            MaxCards = Utility.RandomInt(TT_Script.CardPackMinCards, TT_Script.CardPackMaxCards)
+        }
+        if MaxCards > 20 {
+            MaxCards = 20
+        }
+        return MaxCards
+    }
+
+    fun FindRandomCard() -> MiscObject {
+        var R = Utility.RandomInt(0, 100)
+        if R <= 40 {
+            var List1: FormList = TT_CardLevelsLists.GetAt(1) as FormList
+            var Max = List1.GetSize() - 1
+            return List1.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+        } else {
+            var List0: FormList = TT_CardLevelsLists.GetAt(0) as FormList
+            var Max = List0.GetSize() - 1
+            return List0.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+        }
+    }
+
+    fun FindRandomCardUncommon() -> MiscObject {
+        var R = Utility.RandomInt(0, 100)
+        if R <= 20 {
+            var List4: FormList = TT_CardLevelsLists.GetAt(4) as FormList
+            var Max = List4.GetSize() - 1
+            return List4.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+        } else if R <= 40 {
+            var List3: FormList = TT_CardLevelsLists.GetAt(3) as FormList
+            var Max = List3.GetSize() - 1
+            return List3.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+        } else {
+            var List2: FormList = TT_CardLevelsLists.GetAt(2) as FormList
+            var Max = List2.GetSize() - 1
+            return List2.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+        }
+    }
+
+    fun FindRandomCardRare() -> MiscObject {
+        var R = Utility.RandomInt(0, 100)
+        if R <= 15 {
+            var List7: FormList = TT_CardLevelsLists.GetAt(7) as FormList
+            var Max = List7.GetSize() - 1
+            return List7.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+        } else if R <= 35 {
+            var List6: FormList = TT_CardLevelsLists.GetAt(6) as FormList
+            var Max = List6.GetSize() - 1
+            return List6.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+        } else {
+            var List5: FormList = TT_CardLevelsLists.GetAt(5) as FormList
+            var Max = List5.GetSize() - 1
+            return List5.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+        }
+    }
+
+    fun CheckAndAddUniqueCardsToLists() {
+        var List7: FormList = TT_CardLevelsLists.GetAt(7) as FormList
+        var List8: FormList = TT_CardLevelsLists.GetAt(8) as FormList
+        var List9: FormList = TT_CardLevelsLists.GetAt(9) as FormList
+
+        if MQPaarthurnax.IsCompleted() {
+            var PaarthurnaxCard = TT_UniqueCards.GetAt(23)
+            if List9.HasForm(PaarthurnaxCard) == false {
+                List9.AddForm(PaarthurnaxCard)
+            }
+        }
+
+        if MQ305.IsCompleted() {
+            var AlduinCard = TT_UniqueCards.GetAt(1)
+            if List9.HasForm(AlduinCard) == false {
+                List9.AddForm(AlduinCard)
+            }
+        }
+
+        if DLC2Mq06.IsCompleted() {
+            var MiraakCard = TT_UniqueCards.GetAt(22)
+            if List9.HasForm(MiraakCard) == false {
+                List9.AddForm(MiraakCard)
+            }
+        }
+
+        if DLC2dunKarstaagQST.GetStageDone(20) == true {
+            var KarstaagCard = TT_UniqueCards.GetAt(18)
+            if List9.HasForm(KarstaagCard) == false {
+                List9.AddForm(KarstaagCard)
+            }
+        }
+
+        if DA15.IsCompleted() {
+            var SheogorathCard = TT_UniqueCards.GetAt(3)
+            if List7.HasForm(SheogorathCard) == false {
+                List7.AddForm(SheogorathCard)
+            }
+        }
+
+        if DLC2EbonyWarriorQuest.IsCompleted() {
+            var EbonyWarriorCard = TT_UniqueCards.GetAt(21)
+            if List9.HasForm(EbonyWarriorCard) == false {
+                List9.AddForm(EbonyWarriorCard)
+            }
+        }
+
+        var M = TT_UniqueCardsDeadCheck.GetSize()
+        while M > 0 {
+            M -= 1
+            var CurrentActor: Actor = TT_UniqueCardsActorsDeadCheck.GetAt(M) as Actor
+            if CurrentActor.IsDead() {
+                var Card = TT_UniqueCardsDeadCheck.GetAt(M)
+                var CardValue = Card.GetGoldValue()
+                var CardList: FormList
+                if CardValue == 80 {
+                    CardList = TT_CardLevelsLists.GetAt(7) as FormList
+                } else if CardValue == 90 {
+                    CardList = TT_CardLevelsLists.GetAt(8) as FormList
+                } else {
+                    CardList = TT_CardLevelsLists.GetAt(9) as FormList
+                }
+                if CardList.HasForm(Card) == false {
+                    CardList.AddForm(Card)
+                }
+            }
+        }
+    }
+
+    fun ConvertPackToCards(PreviousHolder: Actor, akCount: Int) {
+        if TT_Script.NPCCardPackAuto == false {
+            var Count = (PlayerRef.GetItemCount(TT_NPCCardPack as Form) + PlayerRef.GetItemCount(TT_NPCCardPackTorch as Form)) - TT_CardPackSavesList.GetSize()
+            var I = 0
+            while I < Count {
+                I += 1
+
+                var TT_CardPackSave: ObjectReference = TT_WinnerChestA.PlaceAtMe(TT_CardPackSaves as Form, 1, true, false)
+
+                var Level: Int
+                if PreviousHolder != none {
+                    Level = PreviousHolder.GetLevel()
+                } else {
+                    Level = PlayerRef.GetLevel()
+                }
+
+                var MaxList: Int
+                if Level <= 10 {
+                    MaxList = 1
+                } else if Level <= 15 {
+                    MaxList = 2
+                } else if Level <= 20 {
+                    MaxList = 3
+                } else if Level <= 25 {
+                    MaxList = 4
+                } else {
+                    MaxList = 5
+                }
+
+                var SavesScript: TT_CardPackSavesScript = TT_CardPackSave as TT_CardPackSavesScript
+                SavesScript.InitArray()
+
+                var CardAmount = GetMaxCards()
+                var II = 0
+                while II < CardAmount {
+                    var CurrentCardList: FormList = TT_CardLevelsLists.GetAt(Utility.RandomInt(0, MaxList)) as FormList
+                    var Max = CurrentCardList.GetSize() - 1
+                    var Card: MiscObject = CurrentCardList.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+                    SavesScript.Cards[II] = Card
+                    II += 1
+                }
+                TT_CardPackSavesList.AddForm(TT_CardPackSave as Form)
+            }
+        } else {
+            var Count = akCount
+            var I = 0
+            while I < Count {
+                I += 1
+
+                var Level: Int
+                if PreviousHolder != none {
+                    Level = PreviousHolder.GetLevel()
+                } else {
+                    Level = PlayerRef.GetLevel()
+                }
+
+                var MaxList: Int
+                if Level <= 10 {
+                    MaxList = 1
+                } else if Level <= 15 {
+                    MaxList = 2
+                } else if Level <= 20 {
+                    MaxList = 3
+                } else if Level <= 25 {
+                    MaxList = 4
+                } else {
+                    MaxList = 5
+                }
+
+                var CardAmount = GetMaxCards()
+                var II = 0
+                while II < CardAmount {
+                    var CurrentCardList: FormList = TT_CardLevelsLists.GetAt(Utility.RandomInt(0, MaxList)) as FormList
+                    var Max = CurrentCardList.GetSize() - 1
+                    var Card: MiscObject = CurrentCardList.GetAt(Utility.RandomInt(0, Max)) as MiscObject
+                    PlayerRef.AddItem(Card as Form)
+                    II += 1
+                }
+                PlayerRef.RemoveItem(TT_NPCCardPack as Form, 1, true)
+                PlayerRef.RemoveItem(TT_NPCCardPackTorch as Form, 1, true)
+            }
+        }
+    }
+}

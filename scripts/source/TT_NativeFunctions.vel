@@ -1,0 +1,20 @@
+// Native functions provided by TripleTriadNative.dll (SKSE plugin).
+// Replaces ConsoleUtil dependency and adds fast AI board evaluation.
+
+script TT_NativeFunctions {
+
+    // === FOV Control (replaces ConsoleUtil) ===
+    native static fun SetFOV(fov: Float)
+    native static fun ResetFOV()
+
+    // === FormList Utilities ===
+    native static fun GetRandomForm(akList: FormList) -> Form
+    native static fun GetRandomFormInRange(akList: FormList, minIndex: Int, maxIndex: Int) -> Form
+    native static fun GetRandomForms(akList: FormList, count: Int, allowDuplicates: Bool = false) -> [Form]
+
+    // === AI Board Evaluation ===
+    native static fun ResetBoard()
+    native static fun SetBoardCard(position: Int, top: Int, right: Int, bottom: Int, left: Int, isPlayerOwned: Bool)
+    native static fun SetHandCard(index: Int, top: Int, right: Int, bottom: Int, left: Int)
+    native static fun FindBestMove(handSize: Int, ruleSame: Bool, rulePlus: Bool, ruleCombo: Bool) -> [Int]
+}

@@ -1,0 +1,112 @@
+script TT_PlayerCardsChestScript : ObjectReference {
+
+    var TT_Script: TT_Skyrim_QuestScript {get set}
+    var TT_AllCardsMiscList: FormList {get set}
+    var TT_PlayerCards: FormList {get set}
+    var TT_AllCardsActivatorList: FormList {get set}
+    var TT_AllCardsList: FormList {get set}
+    var TT_PlayersCurrentCards: FormList {get set}
+    var TT_AllModCardsMiscList: FormList {get set}
+    var PlayerRef: Actor {get set}
+    var TT_PlayerCardCount: GlobalVariable {get set}
+
+    var CardCount: Int {get set} = 0
+
+    // Empty-state stubs (required by Vellum for state overrides)
+    event onItemAdded(akBaseItem: Form, aiItemCount: Int, akItemReference: ObjectReference, akSourceContainer: ObjectReference) {
+    }
+    event onItemRemoved(akBaseItem: Form, aiItemCount: Int, akItemReference: ObjectReference, akDestContainer: ObjectReference) {
+    }
+}
+
+auto state GameNotActive {
+
+    event onItemAdded(akBaseItem: Form, aiItemCount: Int, akItemReference: ObjectReference, akSourceContainer: ObjectReference) {
+        if TT_AllCardsMiscList.HasForm(akBaseItem) && TT_PlayersCurrentCards.HasForm(akBaseItem) == false {
+            TT_PlayersCurrentCards.AddForm(akBaseItem)
+            var I = TT_Script.TT_AllCardsMiscListByValue.Find(akBaseItem)
+            TT_Script.TT_DisplayBookCardAliasArray[I].ForceRefTo(TT_Script.TT_CheckedRef)
+        } else if TT_AllModCardsMiscList.HasForm(akBaseItem) && TT_PlayersCurrentCards.HasForm(akBaseItem) == false {
+            TT_PlayersCurrentCards.AddForm(akBaseItem)
+        } else if TT_AllCardsMiscList.HasForm(akBaseItem) == false && TT_AllModCardsMiscList.HasForm(akBaseItem) == false {
+            (self as ObjectReference).RemoveItem(akBaseItem, aiItemCount, true, akSourceContainer)
+            TT_Script.TT_OnlyTripleTriadCardsMsg.Show()
+        }
+    }
+
+    event onItemRemoved(akBaseItem: Form, aiItemCount: Int, akItemReference: ObjectReference, akDestContainer: ObjectReference) {
+        if TT_AllCardsMiscList.HasForm(akBaseItem) || TT_AllModCardsMiscList.HasForm(akBaseItem) {
+            if self.GetItemCount(akBaseItem) == 0 {
+                TT_PlayersCurrentCards.RemoveAddedForm(akBaseItem)
+                var I = TT_Script.TT_AllCardsMiscListByValue.Find(akBaseItem)
+                if I > -1 {
+                    TT_Script.TT_DisplayBookCardAliasArray[I].ForceRefTo(TT_Script.TT_UnCheckedMinusRef)
+                }
+            }
+        }
+    }
+}
+
+state GameActive {
+
+    event onItemRemoved(akBaseItem: Form, aiItemCount: Int, akItemReference: ObjectReference, akDestContainer: ObjectReference) {
+        if (akDestContainer as Actor) == PlayerRef {
+            if TT_AllCardsMiscList.HasForm(akBaseItem) || TT_AllModCardsMiscList.HasForm(akBaseItem) {
+                var Index = TT_Script.TT_PlayerCardsArray.find(akBaseItem as MiscObject)
+                if Index > -1 && akBaseItem.GetGoldValue() >= 80 {
+                    TT_Script.TT_OnlyOneUniqueCardmsg.Show()
+                    PlayerRef.RemoveItem(akBaseItem, 1, true)
+                    self.AddItem(akBaseItem, 1)
+                } else if CardCount < 5 {
+                    CardCount += 1
+                    var EmptySlot = TT_Script.TT_PlayerCardsArray.find(none)
+                    var Card: MiscObject = akBaseItem as MiscObject
+                    TT_Script.TT_PlayerCardsArray[EmptySlot] = Card
+                    var CardIndex = TT_AllCardsMiscList.Find(akBaseItem)
+                    if CardIndex > -1 {
+                        TT_Script.TT_PlayerHandActivators[EmptySlot] = TT_Script.TT_PlayerHandMarkers[EmptySlot].PlaceAtMe(TT_AllCardsActivatorList.GetAt(CardIndex), 1, false, true)
+                        TT_Script.TT_PlayerHandStatics[EmptySlot] = TT_Script.TT_PlayerHandMarkersB[EmptySlot].PlaceAtMe(TT_AllCardsList.GetAt(CardIndex), 1, false, true)
+                        TT_Script.TT_CardCountMsg.Show(CardCount as Float)
+                    } else if (Card as TT_Skyrim_ModCardScript) != none {
+                        TT_Script.TT_PlayerHandActivators[EmptySlot] = TT_Script.TT_PlayerHandMarkers[EmptySlot].PlaceAtMe((Card as TT_Skyrim_ModCardScript).ActivatorCard as Form, 1, false, true)
+                        TT_Script.TT_PlayerHandStatics[EmptySlot] = TT_Script.TT_PlayerHandMarkersB[EmptySlot].PlaceAtMe((Card as TT_Skyrim_ModCardScript).StaticCard as Form, 1, false, true)
+                        TT_Script.TT_CardCountMsg.Show(CardCount as Float)
+                    } else {
+                        CardCount -= 1
+                        TT_Script.TT_CardNotRecognizedMsg.Show()
+                    }
+                } else {
+                    PlayerRef.RemoveItem(akBaseItem, 1, true, self as ObjectReference)
+                    TT_Script.TT_5CardsChosenMsg.Show()
+                }
+            }
+        }
+    }
+
+    event onItemAdded(akBaseItem: Form, aiItemCount: Int, akItemReference: ObjectReference, akSourceContainer: ObjectReference) {
+        if TT_AllCardsMiscList.HasForm(akBaseItem) == false && TT_AllModCardsMiscList.HasForm(akBaseItem) == false {
+            (self as ObjectReference).RemoveItem(akBaseItem, aiItemCount, true, akSourceContainer)
+            TT_Script.TT_OnlyTripleTriadCardsMsg.Show()
+        } else if (akSourceContainer as Actor) == PlayerRef {
+            var Index = TT_Script.TT_PlayerCardsArray.find(akBaseItem as MiscObject)
+            if Index > -1 {
+                CardCount -= 1
+                TT_Script.TT_PlayerCardsArray[Index] = none
+                TT_Script.TT_PlayerHandActivators[Index].Disable()
+                TT_Script.TT_PlayerHandActivators[Index].Delete()
+                TT_Script.TT_PlayerHandStatics[Index].Disable()
+                TT_Script.TT_PlayerHandStatics[Index].Delete()
+                TT_Script.TT_PlayerHandActivators[Index] = none
+                TT_Script.TT_PlayerHandStatics[Index] = none
+                TT_Script.TT_CardCountMsg.Show(CardCount as Float)
+            }
+        }
+    }
+}
+
+state Busy {
+    event onItemRemoved(akBaseItem: Form, aiItemCount: Int, akItemReference: ObjectReference, akDestContainer: ObjectReference) {
+    }
+    event onItemAdded(akBaseItem: Form, aiItemCount: Int, akItemReference: ObjectReference, akSourceContainer: ObjectReference) {
+    }
+}

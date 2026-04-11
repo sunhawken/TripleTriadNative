@@ -1,0 +1,10 @@
+^G:\STEAMLIBRARY\STEAMAPPS\COMMON\MO2 2.5.2 FOR SKYRIMVR\MODS\TRIPLE TRIAD IN SKYRIM - TWEAKED\SKSE_PLUGIN_SOURCE\BUILD\_DEPS\SPDLOG-SUBBUILD\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SG:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild" "-BG:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild" --check-stamp-file "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/spdlog-populate"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/eed5e2a92e3c2db590266588d5666195/spdlog-populate.rule"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/dc57c1cb20e39e42fba3470e524d7a48/spdlog-populate-complete.rule"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/a8108e85b91ca2ce26180bd1e6cde2ac/spdlog-populate-build.rule"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/a8108e85b91ca2ce26180bd1e6cde2ac/spdlog-populate-configure.rule"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/a8108e85b91ca2ce26180bd1e6cde2ac/spdlog-populate-download.rule"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/a8108e85b91ca2ce26180bd1e6cde2ac/spdlog-populate-install.rule"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/a8108e85b91ca2ce26180bd1e6cde2ac/spdlog-populate-mkdir.rule"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/a8108e85b91ca2ce26180bd1e6cde2ac/spdlog-populate-patch.rule"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/a8108e85b91ca2ce26180bd1e6cde2ac/spdlog-populate-test.rule"
+		},
+		{
+			"file" : "G:/SteamLibrary/steamapps/common/MO2 2.5.2 for SkyrimVR/mods/Triple Triad in Skyrim - Tweaked/SKSE_Plugin_Source/build/_deps/spdlog-subbuild/CMakeFiles/a8108e85b91ca2ce26180bd1e6cde2ac/spdlog-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"spdlog-populate"
+		],
+		"name" : "spdlog-populate"
+	}
+}
