@@ -27,13 +27,22 @@ namespace TT::Papyrus {
     static float s_savedFirstPersonFOV = 0.0f;
 
     void SetFOV(RE::StaticFunctionTag*, float a_fov) {
+        // In Skyrim VR the HMD lens controls visual FOV, and
+        // PlayerCamera's member offsets differ from SE/AE — writing
+        // worldFOV/firstPersonFOV at SE offsets corrupts adjacent
+        // pointer fields, causing a CTD during PlayerCharacter::Update.
+        if (REL::Module::IsVR()) {
+            SKSE::log::info("SetFOV: skipped (VR — HMD controls FOV, "
+                            "SE offsets unsafe)");
+            return;
+        }
+
         auto* cam = RE::PlayerCamera::GetSingleton();
         if (!cam) {
             SKSE::log::warn("SetFOV: PlayerCamera unavailable");
             return;
         }
 
-        // Save the original FOV on first call so ResetFOV can restore it.
         if (!s_fovSaved) {
             s_savedWorldFOV       = cam->worldFOV;
             s_savedFirstPersonFOV = cam->firstPersonFOV;
@@ -44,18 +53,12 @@ namespace TT::Papyrus {
 
         cam->worldFOV       = a_fov;
         cam->firstPersonFOV = a_fov;
-
-        // In Skyrim VR the HMD lens dictates the visual FOV; worldFOV still
-        // affects UI/2D rendering but will not visually zoom the view.
-        if (REL::Module::IsVR()) {
-            SKSE::log::info("SetFOV: {:.1f} (VR: visual FOV is HMD-controlled)", a_fov);
-        } else {
-            SKSE::log::info("SetFOV: {:.1f}", a_fov);
-        }
+        SKSE::log::info("SetFOV: {:.1f}", a_fov);
     }
 
     void ResetFOV(RE::StaticFunctionTag*) {
-        if (!s_fovSaved) return;  // nothing to restore
+        if (REL::Module::IsVR()) return;  // nothing to do in VR
+        if (!s_fovSaved) return;
 
         auto* cam = RE::PlayerCamera::GetSingleton();
         if (!cam) return;

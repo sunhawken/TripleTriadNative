@@ -46,6 +46,8 @@ set(ENABLE_SKYRIM_SE  ON  CACHE BOOL "" FORCE)
 set(ENABLE_SKYRIM_AE  ON  CACHE BOOL "" FORCE)
 set(ENABLE_SKYRIM_VR  ON  CACHE BOOL "" FORCE)
 set(BUILD_TESTS       OFF CACHE BOOL "" FORCE)
+# Prevent install() rules from crashing cmake generate step
+set(CMAKE_SKIP_INSTALL_RULES ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(CommonLibSSE)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
