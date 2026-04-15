@@ -30,13 +30,14 @@ namespace {
                     SKSE::log::error("Failed to register Papyrus functions");
                 }
             }
+            TT::Papyrus::RegisterCosave();
         }
     }
 }
 
 // ── Plugin version (uses CommonLibSSE-NG macros) ────────────────
 SKSEPluginInfo(
-    .Version = { 1, 0, 0, 0 },
+    .Version = { 2, 0, 0, 0 },
     .Name = PLUGIN_NAME,
     .Author = "Triple Triad Tweaked",
     .SupportEmail = "",
