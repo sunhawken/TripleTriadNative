@@ -1,0 +1,14 @@
+# Build output
+SKSE_Plugin_Source/build/
+
+# Compiled DLL backup / archives
+SKSE/Plugins/*.bak
+SKSE/Plugins/*.rar
+
+# Preview images that aren't source
+*_preview/preview_api.jpg
+
+# OS / editor noise
+Thumbs.db
+.DS_Store
+*.user
