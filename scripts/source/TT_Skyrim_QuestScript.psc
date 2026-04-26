@@ -1139,8 +1139,8 @@ Function SetUpBoard()
         TT_ListsToPullFrom.AddForm(TT_CardLevelsLists.GetAt(1))
     Else 
         Int Id = (Startindex - 2)
-        Int M = (Startindex + 1)
-        While Id < M
+        Int MEnd = (Startindex + 1)
+        While Id < MEnd
             Id += 1
             TT_ListsToPullFrom.AddForm(TT_CardLevelsLists.GetAt(Id))
         EndWhile
@@ -1302,40 +1302,8 @@ Function ContinueGame()
         Return
     Endif 
     
-    If Rule_Random == 0
-        TT_PlayerChestScript.GoToState("GameActive")
-;TOP Excluded by TTTT_v1
-        ;Debug.MessageBox("Choose five cards, one at a time.")
-;       TT_Choose5CardsMsg.Show()
-;       Wait(0.1) 
-;       PlayerChoosesCards() 
-;END Excluded by TTTT_v1
-;TOP Included by TTTT_v1
-		Int cards = 0
-		Int j = 0
-		While j < 5
-			If TT_PlayerCardsArrayB[j] != None
-				cards += 1
-			EndIf
-			j += 1
-		EndWhile
-		
-		Int choice = 1
-		If cards > 0
-			;Debug.MessageBox("Reuse cards from previous hand?")
-			choice = (Game.GetFormFromFile(0x801, "Triple Triad Tamriel.esp") as Message).Show()
-		EndIf
-		
-		If choice == 1
-			;Debug.MessageBox("Choose 5 cards, one at a time.")
-			TT_Choose5CardsMsg.Show()
-		EndIf
-        Wait(0.1)
-        PlayerChoosesCards(cards < 5, choice)
-;END Included by TTTT_v1
-    Else 
-        ChooseRandomPlayerCards() 
-    Endif
+    ; Always auto-pick randomly regardless of Rule_Random setting
+    ChooseRandomPlayerCards()
 Endfunction 
 
 Function PlayerChoosesCards(Bool isMissingCards = True, Bool changeAllCards = True);	 Included by TTTT_v1
