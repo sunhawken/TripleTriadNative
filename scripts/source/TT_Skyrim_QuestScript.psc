@@ -195,14 +195,6 @@ MiscObject[] Property TT_PlayerCardsArrayB Auto Hidden;	Included by TTTT_v1
 MiscObject[] Property TT_PlayerCardsArray Auto Hidden 
 MiscObject[] Property TT_OpponentCardsArray Auto Hidden
 Miscobject[] Property TT_OpponentCardsArrayB Auto Hidden
-
-; --- Random card selection tier arrays (populated each game) ---
-MiscObject[] cardsLvl1
-MiscObject[] cardsLvl3
-MiscObject[] cardsLvl5
-MiscObject[] cardsLvl7
-MiscObject[] cardsLvl9
-int[] cardsCount
 Formlist Property TT_OpponentCards Auto ;empty list -
 Formlist Property TT_OpponentCardsB Auto ;empty list
 
@@ -1147,8 +1139,8 @@ Function SetUpBoard()
         TT_ListsToPullFrom.AddForm(TT_CardLevelsLists.GetAt(1))
     Else 
         Int Id = (Startindex - 2)
-        Int MEnd = (Startindex + 1)
-        While Id < MEnd
+        Int M = (Startindex + 1)
+        While Id < M
             Id += 1
             TT_ListsToPullFrom.AddForm(TT_CardLevelsLists.GetAt(Id))
         EndWhile
@@ -1401,133 +1393,62 @@ Function PlayerChoosesCards(Bool isMissingCards = True, Bool changeAllCards = Tr
     Endif
 EndFunction
 
-; Helper: removes card from chest, assigns it to slot, and places the 3D objects
-Function ChoosePlayerCard(int slot, MiscObject card, int cardLevel)
-    TT_PlayerCardsChest.RemoveItem(card, 1)
-    TT_PlayerCardsArray[slot] = card
-
-    Int cardIndex = TT_AllCardsMiscList.Find(card)
-    If cardIndex > -1
-        TT_PlayerHandActivators[slot] = TT_PlayerHandMarkers[slot].PlaceAtMe(TT_AllCardsActivatorList.GetAt(cardIndex), 1, 0, 1)
-        TT_PlayerHandStatics[slot]    = TT_PlayerHandMarkersB[slot].PlaceAtMe(TT_AllCardsList.GetAt(cardIndex), 1, 0, 1)
-    Elseif (card as TT_Skyrim_ModCardScript)
-        TT_PlayerHandActivators[slot] = TT_PlayerHandMarkers[slot].PlaceAtMe((card as TT_Skyrim_ModCardScript).ActivatorCard, 1, 0, 1)
-        TT_PlayerHandStatics[slot]    = TT_PlayerHandMarkersB[slot].PlaceAtMe((card as TT_Skyrim_ModCardScript).StaticCard, 1, 0, 1)
-    Endif
-    Debug.trace("[TT_Tweaked] ChoosePlayerCard slot=" + slot + " card=" + card.GetName() + " level=" + cardLevel)
-EndFunction
-
-Function ChooseRandomPlayerCards()
-    If CancelGame == True || PlayerRef.GetParentCell() != TT_WinnerChestA.GetParentCell()
+Function ChooseRandomPlayerCards() 
+    If CancelGame == True || PlayerRef.GetParentCell() != TT_WinnerChestA.GetParentCell() 
         Return
-    Endif
-    Utility.Wait(0.2)
+    Endif 
+    Wait(0.2)
     TT_PlayerChestScript.GoToState("Busy")
-
-    ; --- Categorise player's chest cards into 5 tiers via TT_CardLevelsLists ---
-    ; TT_CardLevelsLists has 10 level FormLists (0=weakest .. 9=strongest).
-    ; We group pairs of levels into 5 tiers: 0-1->tier0, 2-3->tier1, ... 8-9->tier4.
-    ; Uses vanilla GetItemCount instead of SKSE GetNumItems/GetNthForm.
-    cardsLvl1 = new MiscObject[128]
-    cardsLvl3 = new MiscObject[128]
-    cardsLvl5 = new MiscObject[128]
-    cardsLvl7 = new MiscObject[128]
-    cardsLvl9 = new MiscObject[128]
-    cardsCount = new int[5]
-
-    Int lv = 0
-    While lv < 10
-        FormList tierList = TT_CardLevelsLists.GetAt(lv) as FormList
-        Int bucket = lv / 2
-        Int t = tierList.GetSize() - 1
-        While t >= 0
-            MiscObject card = tierList.GetAt(t) as MiscObject
-            If card && TT_PlayerCardsChest.GetItemCount(card) > 0
-                If bucket == 0 && cardsCount[0] < 128
-                    cardsLvl1[cardsCount[0]] = card
-                    cardsCount[0] += 1
-                ElseIf bucket == 1 && cardsCount[1] < 128
-                    cardsLvl3[cardsCount[1]] = card
-                    cardsCount[1] += 1
-                ElseIf bucket == 2 && cardsCount[2] < 128
-                    cardsLvl5[cardsCount[2]] = card
-                    cardsCount[2] += 1
-                ElseIf bucket == 3 && cardsCount[3] < 128
-                    cardsLvl7[cardsCount[3]] = card
-                    cardsCount[3] += 1
-                ElseIf bucket == 4 && cardsCount[4] < 128
-                    cardsLvl9[cardsCount[4]] = card
-                    cardsCount[4] += 1
-                EndIf
-            EndIf
-            t -= 1
-        EndWhile
-        lv += 1
-    EndWhile
-
-    Debug.trace("[TT_Tweaked] Random hand card counts by tier: " + cardsCount)
-
-    ; Need at least 5 tier-0 cards as a floor (ensures fallback cards exist)
-    If cardsCount[0] < 5
-        Debug.MessageBox("You need at least 5 low level cards to play.")
-        CancelGame = true
-        EndGameC()
-        Return
-    EndIf
-
-    ; --- Fill hand: highest tier first, cascade down ---
-    int slot = 0
-    int i = 4
-    While slot < 5
-        If cardsCount[i] > 0
-            int count = cardsCount[i]
-            int rCardIx = Utility.RandomInt(0, count - 1)
-            MiscObject card
-            If i == 4
-                card = cardsLvl9[rCardIx]
-            ElseIf i == 3
-                card = cardsLvl7[rCardIx]
-            ElseIf i == 2
-                card = cardsLvl5[rCardIx]
-            ElseIf i == 1
-                card = cardsLvl3[rCardIx]
-            Else
-                card = cardsLvl1[rCardIx]
-            EndIf
-            ChoosePlayerCard(slot, card, i)
-            slot += 1
-            ; Swap chosen card out to avoid duplicates in the lowest tier
-            If i == 0
-                cardsLvl1[rCardIx] = cardsLvl1[count - 1]
-                cardsCount[i] -= 1
-            EndIf
-        EndIf
-        If i > 0
-            i -= 1
-        EndIf
-    EndWhile
-
-    Utility.Wait(0.2)
-
+    Int M = (TT_PlayersCurrentCards.GetSize() - 1)
+    Int I = -1
+    While I < 4
+        MiscObject MiscCard = TT_PlayersCurrentCards.GetAt(RandomInt(0, M)) as MiscObject
+        
+        If TT_PlayerCardsChest.GetItemCount(MiscCard) > 0
+            I += 1
+            TT_PlayerCardsChest.RemoveItem(MiscCard, 1)
+            TT_PlayerCardsArray[I] = MiscCard
+            ;Int EmptySlot = TT_PlayerHandActivators.Find(None) 
+            Int CardIndex = TT_AllCardsMiscList.Find(MiscCard) 
+            
+            If CardIndex > -1
+                TT_PlayerHandActivators[I] \
+                = TT_PlayerHandMarkers[I].PlaceAtMe(TT_AllCardsActivatorList.GetAt(CardIndex), 1, 0, 1)
+                
+                TT_PlayerHandStatics[I] \
+                = TT_PlayerHandMarkersB[I].PlaceAtMe(TT_AllCardsList.GetAt(CardIndex), 1, 0, 1)
+                
+            Elseif (MiscCard as TT_Skyrim_ModCardScript)
+                TT_PlayerHandActivators[I] \
+                = TT_PlayerHandMarkers[I].PlaceAtMe((MiscCard as TT_Skyrim_ModCardScript).ActivatorCard, 1, 0, 1)
+                
+                TT_PlayerHandStatics[I] \
+                = TT_PlayerHandMarkersB[I].PlaceAtMe((MiscCard as TT_Skyrim_ModCardScript).StaticCard, 1, 0, 1)
+            Endif 
+        Endif
+    EndWhile 
+    
+    Wait(0.2) 
+    
     Int Ia = -1
     While Ia < 4
         Ia += 1
         TT_PlaceCard.Play(PlayerRef)
         TT_PlayerHandActivators[Ia].Enable()
-        Utility.Wait(0.2)
+        Wait(0.2)
     EndWhile
-
-    Utility.Wait(0.5)
-
+    
+    Wait(0.5)
+    
     Int Iz = -1
     While Iz < 4
         Iz += 1
         TT_PlaceCard.Play(PlayerRef)
         TT_OpponentHandStatics[Iz].Enable()
-        Utility.Wait(0.2)
+        Wait(0.2)
     EndWhile
     ;TT_PlayerChestScript.GoToState("GameActive")
-    PlayerChoosesCardsB()
+    PlayerChoosesCardsB() 
 EndFunction
 
 Function PlayerChoosesCardsB()
