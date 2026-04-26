@@ -1139,8 +1139,8 @@ Function SetUpBoard()
         TT_ListsToPullFrom.AddForm(TT_CardLevelsLists.GetAt(1))
     Else 
         Int Id = (Startindex - 2)
-        Int M = (Startindex + 1)
-        While Id < M
+        Int MEnd = (Startindex + 1)
+        While Id < MEnd
             Id += 1
             TT_ListsToPullFrom.AddForm(TT_CardLevelsLists.GetAt(Id))
         EndWhile
